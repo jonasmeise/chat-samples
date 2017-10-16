@@ -31,11 +31,18 @@ body {
     background-color: rgb(238, 255, 249);
     color: rgb(92, 180, 143);
     text-align: center;
-    border-bottom: 1px solid rgb(225, 236, 233);
+    border-bot
+    tom: 1px solid rgb(225, 236, 233);
+}
+.form {
+    float: left;
+    margin-top: 5px;
+    letter-spacing: 1px;
+    font-size: 14px;
 }
 #leaderboard {
     border: 1px solid rgb(9, 179, 117);
-    width: 256px;
+    width: 750px;
     margin: 0 auto;
     float: right;
     display: inline-block;
@@ -63,11 +70,13 @@ body {
     font-weight: bold;
 }
 .user-name {
+    font-size: 14px;
     display: block;
     margin-bottom: 5px;
 }
 .user-points {
-    font-size: 24px;
+    font-size: 14px;
+    font-weight: bold;
 }
 button {
     display: block;

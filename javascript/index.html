@@ -10,7 +10,7 @@ or in the "license" file accompanying this file. This file is distributed on an 
 -->
 <html>
 <head>
-    <title>Leaderboards</title>
+    <title>Copypasta Leaderboard</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <link rel="stylesheet" href="leaderboard.css">
 </head>
@@ -20,7 +20,7 @@ or in the "license" file accompanying this file. This file is distributed on an 
             <span class="rank"></span>
             <div class="user-info">
                 <span class="user-name"></span>
-                <span class="user-points"></span> points
+                <span class="user-points"></span> spams
             </div>
         </div>
     </script>
@@ -28,11 +28,23 @@ or in the "license" file accompanying this file. This file is distributed on an 
     <div class="button-list">
         <button class="connect btn">Connect to chat</button>
         <button class="disconnect btn">Disconnect from chat</button>
-        <button class="display btn">Populate leaderboard</button>
+        <!--<button class="display btn">Populate leaderboard</button>-->
+    </div>
+
+    <div class="form">
+        Minimale Copypastalaenge: <br>
+        <input type="text" id="copypastalength" value="15">
+        <br>
+        Channel: <br>
+        <input type="text" id="channel" value="twitchpresents">
+	<br>
+    	<br>
+        Bereits existierende Daten löschen?
+        <input type="checkbox" id="reset">
     </div>
 
     <div id="leaderboard">
-        <div class="header">Leaderboard</div>
+        <div class="header">Copypasta Leaderboard</div>
         <div class="leaderboard-output"></div>
     </div>
 
@@ -51,9 +63,9 @@ or in the "license" file accompanying this file. This file is distributed on an 
     });
 
     window.chatClient = new chatClient({
-        channel: '#CHANNELNAMEHERE',
-        username: 'USERNAMEHERE',
-        password: 'oauth:AUTHTOKENHERE',
+        channel: '#' + document.getElementById("channel").value,
+        username: 'luxu5',
+        password: 'oauth:fy8pf3zglphnqvax6ejc6ozs8m3lzr',
     });
     </script>
 </body>

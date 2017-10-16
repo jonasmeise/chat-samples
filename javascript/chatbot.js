@@ -11,6 +11,8 @@ or in the "license" file accompanying this file. This file is distributed on an 
     Web Socket to Twitch chat. The important part events are onopen and onmessage.
 */
 
+var updatecounter=0;
+
 var chatClient = function chatClient(options){
     this.username = options.username;
     this.password = options.password;
@@ -21,13 +23,24 @@ var chatClient = function chatClient(options){
 }
 
 chatClient.prototype.open = function open(){
+    updateChannel();
+
+    console.log(this.username + "/Bot gestartet fuer " + this.channel);
     this.webSocket = new WebSocket('wss://' + this.server + ':' + this.port + '/', 'irc');
 
     this.webSocket.onmessage = this.onMessage.bind(this);
     this.webSocket.onerror = this.onError.bind(this);
     this.webSocket.onclose = this.onClose.bind(this);
     this.webSocket.onopen = this.onOpen.bind(this);
+
+    if(document.getElementById("reset").checked) {
+	    localStorage.clear();
+    }
 };
+
+function updateChannel(){
+    this.channel = document.getElementById("channel").value;
+}
 
 chatClient.prototype.onError = function onError(message){
     console.log('Error: ' + message);
@@ -37,17 +50,38 @@ chatClient.prototype.onError = function onError(message){
    that value in local storage. It will show up when you click Populate Leaderboard in the UI. 
 */
 chatClient.prototype.onMessage = function onMessage(message){
-    if(message !== null){
-        var parsed = this.parseMessage(message.data);
 
-        if(parsed !== null){
-            userPoints = localStorage.getItem(parsed.username);
+    var parsed = this.parseMessage(message.data);
 
-            if(userPoints === null){
-                localStorage.setItem(parsed.username, 10);
+    if(parsed !== null){
+
+        /*console.log(parsed.message);
+        userPoints = localStorage.getItem(parsed.username);
+
+        if(userPoints === null){
+            localStorage.setItem(parsed.username, 10);
+        }
+        else {
+                localStorage.setItem(parsed.username, parseFloat(userPoints) + 0.25);
+        }*/
+
+        var input = parsed.message;
+        var cutlength = document.getElementById("copypastalength").value;
+
+        if(input.length >= cutlength){
+            var counter = localStorage.getItem(input);
+
+            if(counter!=null) {
+                localStorage.setItem(input, parseFloat(counter)+1);
             }
             else {
-                localStorage.setItem(parsed.username, parseFloat(userPoints) + 0.25);
+                localStorage.setItem(input, 1);
+            }
+
+            updatecounter++;
+            if(updatecounter > 10){
+                buildLeaderboard();
+                updatecounter=0;
             }
         }
     }
@@ -62,7 +96,7 @@ chatClient.prototype.onOpen = function onOpen(){
         socket.send('CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership');
         socket.send('PASS ' + this.password);
         socket.send('NICK ' + this.username);
-        socket.send('JOIN ' + this.channel);
+        socket.send('JOIN #' + document.getElementById("channel").value);
     }
 };
 
@@ -128,14 +162,14 @@ function buildLeaderboard(){
 
     leaderboard.empty();
 
-    for(var i = 0; i < 10; i++){
-        var viewerName = sortedData[i],
+    for(var i = 0; i < 1000; i++){
+        var pastaName = sortedData[i],
             template = $(outputTemplate);
 
-        template.find('.rank').text(i + 1);
-        template.find('.user-name').text(viewerName);
-        template.find('.user-points').text(localStorage[viewerName]);
+            template.find('.rank').text(i + 1);
+            template.find('.user-name').text(pastaName);
+            template.find('.user-points').text(localStorage[pastaName]);
 
-        leaderboard.append(template);
+            leaderboard.append(template);
     }
 }
