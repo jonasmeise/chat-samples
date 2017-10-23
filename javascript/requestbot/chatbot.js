@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
@@ -12,6 +12,18 @@ or in the "license" file accompanying this file. This file is distributed on an 
 */
 
 var updatecounter=0;
+var commandString = '!request';
+var modrequest = false;
+var modrequestString  = '!modreq';
+var getString = '!get';
+var skipString = '!skip';
+var modString = '!okay';
+var helpString = '!help';
+var reqArray = new Array();
+var currentReader = 0;
+var endReader = 0;
+var myWebSocket;
+var mods = ["luxu5", "alkhalim", "luxu5requestbot"];
 
 var chatClient = function chatClient(options){
     this.username = options.username;
@@ -25,15 +37,12 @@ var chatClient = function chatClient(options){
 chatClient.prototype.open = function open(){
     console.log(this.username + "/Bot gestartet fuer #" + document.getElementById("channel").value);
     this.webSocket = new WebSocket('wss://' + this.server + ':' + this.port + '/', 'irc');
+    myWebSocket = this.webSocket;
 
     this.webSocket.onmessage = this.onMessage.bind(this);
     this.webSocket.onerror = this.onError.bind(this);
     this.webSocket.onclose = this.onClose.bind(this);
     this.webSocket.onopen = this.onOpen.bind(this);
-
-    if(document.getElementById("reset").checked) {
-	    localStorage.clear();
-    }
 };
 
 chatClient.prototype.onError = function onError(message){
@@ -61,6 +70,7 @@ chatClient.prototype.onMessage = function onMessage(message){
 
         //PING CHECK
         var original = parsed.original;
+
         if(original === 'PING :tmi.twitch.tv\r\n'){
             console.log("Bot wurde gepingt. Pong back")
             //PONG BACK
@@ -69,28 +79,138 @@ chatClient.prototype.onMessage = function onMessage(message){
 
         if(parsed.command === 'PRIVMSG')
         {
-            var input = parsed.message;
-            var cutlength = document.getElementById("copypastalength").value;
+            var msg = parsed.message;
+            console.log(msg);
 
-            if(input.length >= cutlength){
-                var counter = localStorage.getItem(input);
+            if(msg.localeCompare(commandString + '\r\n') === 0)
+            {
+                send('Type "!request [link]" to request sheet music for me to play! Your song will be added to the queue this way.');
+                console.log("??");
+            }
+            else if(msg.startsWith(commandString)){
+                var link = msg.split(" ")[1].slice(0, -1);
 
-                if(counter!=null) {
-                    localStorage.setItem(input, parseFloat(counter)+1);
+                var newID = randomID();
+                var output = link + ';' + parsed.username + ';' + newID + ';' + settingModrequest();
+
+                reqArray[endReader] = output;
+                endReader++;
+
+                if(modrequest){
+                    send('Request added! Mods need to confirm your song with "' + modString + ' ' + newID + '".');
                 }
-                else {
-                    localStorage.setItem(input, 1);
+                else
+                {
+                    send('Request successfully added!');
                 }
 
-                updatecounter++;
-                if(updatecounter >= 0){
-                    buildLeaderboard();
-                    updatecounter=0;
+                console.log(output + ' zu Liste hinzugefügt.');
+            }
+            else if(msg.startsWith(modrequestString)){
+                if(hasRights(parsed.username)){
+                    modrequest = !modrequest;
+
+                    send('Mod confirmation for song requests: ' + modrequest);
                 }
+            }
+            else if(msg.startsWith(getString)){
+                if(hasRights(parsed.username)){
+		    if(reqArray.length <= currentReader){
+			send('No songs in queue at the moment :(');
+	 	    }
+
+                    var nextsong = reqArray[currentReader].split(';');
+
+                    if(nextsong[3].startsWith('1')){
+                        currentReader++;
+                        send('Next song: "' + nextsong[0] + '" requested by ' + nextsong[1]);
+                    }
+                    else
+                    {
+                        send('The song "' + nextsong[0] + '" requested by ' + nextsong[1] + '(' + nextsong[2] + ') is still awaiting moderation!');
+                    }
+                }
+            }
+            else if(msg.startsWith(skipString)){
+                if(hasRights(parsed.username)){
+                    currentReader++;
+
+                    send('Skipped the next song!');
+                }
+            }
+            else if(msg.startsWith(modString)){
+                if(hasRights(parsed.username))
+                {
+                    var number = msg.split(" ")[1].slice(0, -2);
+	            var counter = 0;
+
+                    for (let entry of reqArray)
+                    {
+                        var splitty = entry.split(';')[2];
+
+                        if(splitty.localeCompare(number) === 0)
+                        {
+                            reqArray[counter] = entry.slice(0, -1) + '1';
+                            console.log(reqArray[counter]);
+                            console.log('Eintrag #' + number + ' erfolgreich bestaetigt.');
+			    send('Request #' + number + ' confirmed!');
+                        }
+                        counter++;
+                    }
+                }
+            }
+            else if(msg.startsWith(helpString)){
+                send("Commands: !request, !help . Mod commands: !get, !okay, !skip, !modreq");
             }
         }
     }
 };
+
+function hasRights(username){
+    for (let name of mods)
+    {
+        if(username.localeCompare(name) === 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function settingModrequest(){
+    if(modrequest){
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
+function randomID() {
+    var a = [], i = ('a').charCodeAt(0), j = ('z').charCodeAt(0), end = '';
+
+        for (y=i; y <= j; ++y) {
+            a.push(String.fromCharCode(y));
+        }
+
+    for (x=0;x<5;x++)
+    {
+        end = end + a[Math.round(Math.random()*25)];
+    }
+
+    return end;
+
+}
+
+function send(message){
+    if (myWebSocket !== null && myWebSocket.readyState === 1) {
+            console.log('Sending ' + message);
+
+            myWebSocket.send('PRIVMSG #' + document.getElementById("channel").value + ' :' + message);
+    }
+}
 
 chatClient.prototype.onOpen = function onOpen(){
     var socket = this.webSocket;
@@ -154,27 +274,4 @@ chatClient.prototype.parseMessage = function parseMessage(rawMessage) {
     }*/
 
     return parsedMessage;
-}
-
-/* Builds out the top 10 leaderboard in the UI using a jQuery template. */
-function buildLeaderboard(){
-    var chatKeys = Object.keys(localStorage),
-        outputTemplate = $('#entry-template').html(),
-        leaderboard = $('.leaderboard-output'),
-        sortedData = chatKeys.sort(function(a,b){
-            return localStorage[b]-localStorage[a]
-        });
-
-    leaderboard.empty();
-
-    for(var i = 0; i < 1000; i++){
-        var pastaName = sortedData[i],
-            template = $(outputTemplate);
-
-            template.find('.rank').text(i + 1);
-            template.find('.user-name').text(pastaName);
-            template.find('.user-points').text(localStorage[pastaName]);
-
-            leaderboard.append(template);
-    }
 }

@@ -32,20 +32,8 @@ or in the "license" file accompanying this file. This file is distributed on an 
     </div>
 
     <div class="form">
-        Minimale Copypastalaenge: <br>
-        <input type="text" id="copypastalength" value="15">
-        <br>
         Channel: <br>
-        <input type="text" id="channel" value="twitchpresents">
-	<br>
-    	<br>
-        Bereits existierende Daten loeschen?
-        <input type="checkbox" id="reset">
-    </div>
-
-    <div id="leaderboard">
-        <div class="header">Copypasta Leaderboard</div>
-        <div class="leaderboard-output"></div>
+        <input type="text" id="channel" value="luxu5">
     </div>
 
     <script src="chatbot.js"></script>
@@ -57,15 +45,12 @@ or in the "license" file accompanying this file. This file is distributed on an 
         $('.disconnect').click(function(){
             window.chatClient.close();
         });
-        $('.display').click(function(){
-            buildLeaderboard();
-        });
     });
 
     window.chatClient = new chatClient({
         channel: '#' + document.getElementById("channel").value,
-        username: 'luxu5',
-        password: 'oauth:fy8pf3zglphnqvax6ejc6ozs8m3lzr',
+        username: 'luxu5requestbot',
+        password: 'oauth:e69st8dr3n1fpjfqh5jzhdi6ir4nz3',
     });
     </script>
 </body>
